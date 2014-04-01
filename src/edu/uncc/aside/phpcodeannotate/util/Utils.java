@@ -851,7 +851,7 @@ if(isAnnotated == false){//not annotated yet, show red warnings with questions
 					
 				}
 			}else{//actually there exist other cases we need to handle, but for now, we focus on known class only.
-				//System.out.println("type binding is not class");
+				System.out.println("type binding is not null and it is not class");
 				
 					if(node.getDispatcher().getType() == 60){
 					//	System.out.println("60");
@@ -860,7 +860,7 @@ if(isAnnotated == false){//not annotated yet, show red warnings with questions
 						//	System.out.println("33");
 							Identifier dispatcherIdentifier = (Identifier)dispatcher.getVariableName();
 							String dispatcherName = dispatcherIdentifier.getName();
-					//		System.out.println("dispatch=" + dispatcherName + " methodname="+ methodName);
+							System.out.println("dispatch=" + dispatcherName + " methodname="+ methodName);
 								SensitiveMethod sm = new SensitiveMethod(dispatcherName, methodName);
 								if(Plugin.sensitiveOperations_backup.contains(sm)){ // handle the cases when it is like $DB->insert_record(), $DB->
 								//if(dispatcherName.equals("DB") && methodName.equals("update_record")){ //this is the problem
@@ -906,6 +906,18 @@ if(isAnnotated == false){//not annotated yet, show red warnings with questions
 								
 							
 						}
+					}
+					//the following else if block is newly added, so if the dispatcher part
+					//is a variable, (means the variable class case), then we assume it is the
+					//correct class type, and only consider the function name to determine 
+					//whether it is a sensitive method match.
+					//e.g. $newfield = 'profile_field_'.$field->datatype;
+                    //$formfield = new $newfield($field->id);
+                    //$formfield->edit_field($mform);
+					if(typeBinding.isInterface()){						
+						if(isProbablyMatchingMethod(methodName, sensitiveOperations)){
+							return true;
+						}				
 					}
 				}
 				
@@ -957,6 +969,27 @@ if(isAnnotated == false){//not annotated yet, show red warnings with questions
 		
 		return false;
 	}
+	
+	public static boolean isProbablyMatchingMethod(String methodName, HashSet<SensitiveMethod> sensitiveOperations) {
+		//    System.out.println("sensitiveOperationsForCurrentIteration size =" + Plugin.sensitiveOperationsForCurrentIteration.size());
+		Iterator iter = sensitiveOperations.iterator();
+		SensitiveMethod sm = null;
+		String dispatcherName = null;
+		String funcName = null;
+		while(iter.hasNext()){
+			sm = (SensitiveMethod)iter.next();
+			funcName = sm.getFunctionName();
+			dispatcherName = sm.getDispatcherType();
+			if(!dispatcherName.equals(Constants.isPureFunction)){
+				if(funcName.equals(methodName)){//if the function name is the same, then it is probably matching.
+					return true;
+				}
+			}
+		}
+		return false;
+		
+	}
+	
 	public static boolean isSecurityInterest(MethodInvocation node, HashSet<String> sensitiveOperations) {
 		Identifier methodIdentifier = null;
 		
