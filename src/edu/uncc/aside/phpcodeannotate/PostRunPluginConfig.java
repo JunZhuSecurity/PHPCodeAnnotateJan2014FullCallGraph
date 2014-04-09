@@ -88,7 +88,8 @@ public class PostRunPluginConfig {
 		boolean isAnnotated;
 		String seperator = Plugin.COMMA;
 		StringBuffer strBuf = new StringBuffer();
-		
+		String funcName = null;
+		int lineNum = 0;
 		
 		while(iter.hasNext()){
 			StringBuffer annotationsStrBuf = new StringBuffer();
@@ -104,6 +105,10 @@ public class PostRunPluginConfig {
 			nodeStart = tmpMarkerRecord.getNodePositionInfo().getStartPosition();
 			nodeLength = tmpMarkerRecord.getNodePositionInfo().getLength();
 			
+			//newly added
+			funcName = tmpMarkerRecord.getWarnedStr();
+			lineNum = tmpMarkerRecord.getLineNum();
+					
 			iterAnnotation = tmpMarkerRecord.getAnnotationRecords().iterator();
 			while(iterAnnotation.hasNext()){
 				annotationRecord = iterAnnotation.next();
@@ -113,7 +118,7 @@ public class PostRunPluginConfig {
 					annotationsStrBuf.append(annotationRecord.hashCode());
 			}
 			//store the Marker information in the persistent file
-			String str = markerHashCode + seperator + fileDir + seperator + nodeStart + seperator + nodeLength + seperator + markerType + seperator + isAnnotated + seperator + annotationsStrBuf.toString() + "\n";
+			String str = "Warned code is " + seperator + funcName + seperator + " on line " + lineNum + seperator + " in " + seperator + fileDir + "\n"; /*+ seperator + nodeStart + seperator + nodeLength + seperator + markerType + seperator + isAnnotated + seperator + annotationsStrBuf.toString() + "\n"*/;
 			strBuf.append(str);
 		//	System.out.println("fileDir=" + fileDir + ", nodeStart=" + nodeStart + ",nodeLength=" + nodeLength + ", markerType=" + markerType + ",isAnnotated=" + isAnnotated);
 		}

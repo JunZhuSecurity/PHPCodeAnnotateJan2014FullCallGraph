@@ -23,7 +23,7 @@ public class PreRunPluginConfig {
 		if(Plugin.FIRST_TIME_RUN == false){ 
 			//if this is not the first time running it, we need to read
 			//the markers and annotation recordsin the file
-		Plugin.allMarkerRecords = readMarkerRecordFile();
+		//Plugin.allMarkerRecords = readMarkerRecordFile();
 		Plugin.allAnnotationRecords = readAnnotationRecordFile();
 		}
 	}
@@ -82,7 +82,7 @@ public class PreRunPluginConfig {
 		}
 	
 
-	public static HashSet<MarkerRecord> readMarkerRecordFile() {
+	/*public static HashSet<MarkerRecord> readMarkerRecordFile() {
 		// /read file and create the set of MarkerRecord, as well as initilize
 		// all the marker with the corresponding resources;
 		String markerRecordFileName = Plugin.STATE_LOCATION + "/" + Plugin.MARKER_RECORD_FILE;
@@ -133,7 +133,7 @@ public class PreRunPluginConfig {
 			e.printStackTrace();
 		}
 		return allMarkerRecords;
-	}
+	}*/
 
 	private static HashSet<AnnotationRecord> readAnnotationRecordFile() {
 		String annotationRecordFileName = Plugin.STATE_LOCATION + "/" + Plugin.ANNOTATION_RECORD_FILE;

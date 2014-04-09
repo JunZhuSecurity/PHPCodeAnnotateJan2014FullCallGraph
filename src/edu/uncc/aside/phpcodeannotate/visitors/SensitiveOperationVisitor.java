@@ -170,6 +170,8 @@ import org.eclipse.dltk.compiler.problem.ProblemSeverities;
 import org.eclipse.dltk.core.ISourceModule;
 import org.eclipse.dltk.core.ModelException;
 import org.eclipse.dltk.core.builder.IBuildContext;
+import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.Document;
 import org.eclipse.php.internal.core.ast.nodes.ClassDeclaration;
 import org.eclipse.php.internal.core.ast.nodes.FieldAccess;
 import org.eclipse.php.internal.core.ast.nodes.FunctionInvocation;
@@ -209,7 +211,6 @@ public class SensitiveOperationVisitor extends ApplyAll {
 	public SensitiveOperationVisitor(ISourceModule sourceModule, HashSet<SensitiveMethod> sensitiveOperationsForCurrentIteration, 
 			HashSet<SensitiveMethod> sensitiveOperationsForAnotherIteration, 
 			HashSet<SensitiveMethod> sensitiveOperations) {
-
 		projectOfInterest = sourceModule.getResource().getProject();
 		this.iSourceModule = sourceModule; 
 		this.sensitiveOperationsForCurrentIteration = sensitiveOperationsForCurrentIteration;
@@ -255,13 +256,44 @@ public class SensitiveOperationVisitor extends ApplyAll {
 		}
 		Utils.markAccessor(node, resource);
 		
+		//newly added info
+		
+		Document document = null;
+		try {
+			document = new Document(node.getProgramRoot().getSourceModule().getSource());
+		} catch (ModelException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		int lineNum = 0;
+		try {
+			lineNum = document.getLineOfOffset(node.getStart()) + 1;
+		} catch (BadLocationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	    
+		System.out.println("line num = " + lineNum);
+		String funcName = "";
+		
+		Identifier methodIdentifier = null;
+		//System.out.println("functioninvocation = " + node.getFunctionName().getName().toString());
+		if (node.getFunctionName().getFunctionName().getType() == ASTNode.IDENTIFIER) {
+				 Identifier id = (Identifier) node.getFunctionName().getFunctionName();
+				 funcName = id.getName();
+		}
+		
 		//create markerRecord for this marker, and insert into the set of markers
 		String fileDir = resource.getFullPath().toString();
 //		System.out.println("fileDir of the new marker is: " + fileDir);
 		int nodeStart = node.getStart();
 		int nodeLength = node.getLength();
 		NodePositionInfo nodePositionInfo = new NodePositionInfo(fileDir, nodeStart, nodeLength);
-		MarkerRecord markerRecord = new MarkerRecord(nodePositionInfo, MarkerType.ACCESS_CONTROL, false);
+		
+		//newly modified
+		MarkerRecord markerRecord = new MarkerRecord(nodePositionInfo, funcName, lineNum, MarkerType.ACCESS_CONTROL, false);
+			
+		
 		Plugin.allMarkerRecords.add(markerRecord);
 		
 		//newly added
@@ -383,8 +415,39 @@ public class SensitiveOperationVisitor extends ApplyAll {
 				if (resource == null) {
 					System.err.println("Check here...");
 				}
+				System.out.println("going to mark a sensitive method");
 				Utils.markAccessor(node, resource);
 
+				
+				//newly added info
+							
+				Document document = null;
+				try {
+					document = new Document(node.getProgramRoot().getSourceModule().getSource());
+				} catch (ModelException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				int lineNum = 0;
+				try {
+					lineNum = document.getLineOfOffset(node.getStart()) + 1;
+				} catch (BadLocationException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			    
+				System.out.println("line num = " + lineNum);
+				String funcName = "";
+				
+				if (node.getMethod().getFunctionName().getFunctionName().getType() == 60) {
+					Variable varNode = (Variable) node.getMethod().getFunctionName()
+							.getFunctionName();
+					if (varNode.getVariableName().getType() == 33){
+						Identifier methodIdentifier = (Identifier) varNode.getVariableName();
+						funcName = methodIdentifier.getName();
+					}
+				}
+				
 				// create markerRecord for this marker, and insert into the set
 				// of markers
 				String fileDir = resource.getFullPath().toString();
@@ -394,7 +457,9 @@ public class SensitiveOperationVisitor extends ApplyAll {
 				int nodeLength = node.getLength();
 				NodePositionInfo nodePositionInfo = new NodePositionInfo(
 						fileDir, nodeStart, nodeLength);
-				MarkerRecord markerRecord = new MarkerRecord(nodePositionInfo,
+				
+				//newly modified
+				MarkerRecord markerRecord = new MarkerRecord(nodePositionInfo, funcName, lineNum,
 						MarkerType.ACCESS_CONTROL, false);
 				Plugin.allMarkerRecords.add(markerRecord);
 System.out.println("Plugin.allMarkerRecords size = " + Plugin.allMarkerRecords.size());

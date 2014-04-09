@@ -128,7 +128,7 @@ public class ASIDECodeAnnotateHandler extends AbstractHandler {
 			currentTableName = Plugin.sensitive_DB_Tables_AlphRanked.first();
 			count = 1;
 			Plugin.allMarkerRecords.clear();
-			
+			//newly added count==1 && , to restrict the running
 		while(Plugin.sensitiveOperationsForCurrentIteration != null && 
 				Plugin.sensitiveOperationsForCurrentIteration.size() != 0){
 		count++;

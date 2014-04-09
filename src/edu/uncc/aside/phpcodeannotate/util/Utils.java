@@ -248,7 +248,8 @@ public class Utils {
 					return;
 				}
 			}
-			
+			int lineNum = root.getLineNumber(mi.getStart());
+			System.out.println("in markAccessor line num = " + lineNum);
 
 			IMarker questionMarker = resource
 					.createMarker(Plugin.ANNOTATION_QUESTION);
@@ -861,6 +862,7 @@ if(isAnnotated == false){//not annotated yet, show red warnings with questions
 							Identifier dispatcherIdentifier = (Identifier)dispatcher.getVariableName();
 							String dispatcherName = dispatcherIdentifier.getName();
 							System.out.println("dispatch=" + dispatcherName + " methodname="+ methodName);
+							
 								SensitiveMethod sm = new SensitiveMethod(dispatcherName, methodName);
 								if(Plugin.sensitiveOperations_backup.contains(sm)){ // handle the cases when it is like $DB->insert_record(), $DB->
 								//if(dispatcherName.equals("DB") && methodName.equals("update_record")){ //this is the problem
@@ -893,9 +895,10 @@ if(isAnnotated == false){//not annotated yet, show red warnings with questions
 											Plugin.numberOfWarningsRelatedToEachTable.put(pureTableName, Plugin.numberOfWarningsRelatedToEachTable.get(pureTableName) + 1);
 										*/
 										/////////modified01/05/2014, previous is, Plugin.sensitive_DB_Tables_AlphRanked.contains(pureTableName)
+										System.out.println("pure table name = " + pureTableName);
 										if(Plugin.sensitive_DB_Tables_AlphRanked.first().equals(pureTableName))//if(pureTableName.equals(Plugin.CurrentSensitiveDBTable))
 										{
-											//System.out.println("functionName = " + methodName);
+											System.out.println("tablename matched = " + pureTableName);
 											return true;
 										}
 									//	}
@@ -903,22 +906,23 @@ if(isAnnotated == false){//not annotated yet, show red warnings with questions
 									}
 									}
 								 }
-								
+								//the following else if block is newly added, so if the dispatcher part
+								//is a variable, (means the variable class case), then we assume it is the
+								//correct class type, and only consider the function name to determine 
+								//whether it is a sensitive method match.
+								//e.g. $newfield = 'profile_field_'.$field->datatype;
+			                    //$formfield = new $newfield($field->id);
+			                    //$formfield->edit_field($mform);
+							/*	else if(typeBinding.isInterface()){	
+									System.out.println("typeBinding of the method invocation dispatcher is isInterface");
+									if(isProbablyMatchingMethod(methodName, sensitiveOperations)){
+										return true;
+									}				
+								}*/
 							
 						}
 					}
-					//the following else if block is newly added, so if the dispatcher part
-					//is a variable, (means the variable class case), then we assume it is the
-					//correct class type, and only consider the function name to determine 
-					//whether it is a sensitive method match.
-					//e.g. $newfield = 'profile_field_'.$field->datatype;
-                    //$formfield = new $newfield($field->id);
-                    //$formfield->edit_field($mform);
-					if(typeBinding.isInterface()){						
-						if(isProbablyMatchingMethod(methodName, sensitiveOperations)){
-							return true;
-						}				
-					}
+					
 				}
 				
 			}

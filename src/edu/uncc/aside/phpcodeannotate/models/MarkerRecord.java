@@ -10,14 +10,41 @@ public class MarkerRecord {
 	private boolean annotated;
 	private Set<AnnotationRecord> annotationRecords;
 	
-	public MarkerRecord(NodePositionInfo nodePositionInfo, String markerType, boolean annotated){
+	private String warnedStr;
+	private int lineNum;
+	
+	public MarkerRecord(NodePositionInfo nodePositionInfo, String warnedStr, int lineNum, String markerType, boolean annotated){
 		this.nodePositionInfo = nodePositionInfo;
 		this.markerType = markerType;
 		this.numOfAnnotations = 0;
 		this.annotated = annotated;
 		this.annotationRecords = new HashSet<AnnotationRecord>();
+		
+		this.warnedStr = warnedStr;
+		this.lineNum = lineNum;
 	}
 	
+	
+	public String getWarnedStr() {
+		return warnedStr;
+	}
+
+
+	public void setWarnedStr(String warnedStr) {
+		this.warnedStr = warnedStr;
+	}
+
+
+	public int getLineNum() {
+		return lineNum;
+	}
+
+
+	public void setLineNum(int lineNum) {
+		this.lineNum = lineNum;
+	}
+
+
 	public void addAnnotation(AnnotationRecord annotationRecord){
 		this.getAnnotationRecords().add(annotationRecord);
 		this.setNumOfAnnotations(this.getAnnotationRecords().size());
