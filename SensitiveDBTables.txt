@@ -1,1 +1,4 @@
-comments
+groups
+message
+message_read
+forum

@@ -1,1 +1,15 @@
-insert_record
+get_record
+get_record_select
+get_records
+get_records_select
+get_records_menu
+get_records_list
+get_records_select_menu
+get_field
+get_field_select
+get_fieldset_select
+get_record_sql
+get_records_sql
+get_records_sql_menu
+get_field_sql
+get_fieldset_sql

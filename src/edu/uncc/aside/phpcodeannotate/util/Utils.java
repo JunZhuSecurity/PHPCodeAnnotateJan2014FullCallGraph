@@ -16,8 +16,11 @@ import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.dltk.ast.references.VariableReference;
 import org.eclipse.dltk.core.DLTKCore;
 import org.eclipse.dltk.core.ISourceModule;
+import org.eclipse.dltk.core.ModelException;
 import org.eclipse.dltk.core.builder.IBuildContext;
 import org.eclipse.dltk.ui.DLTKUIPlugin;
+import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.Document;
 import org.eclipse.php.internal.core.PHPVersion;
 import org.eclipse.php.internal.core.ast.nodes.ASTNode;
 import org.eclipse.php.internal.core.ast.nodes.ASTParser;
@@ -40,6 +43,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.texteditor.ITextEditor;
 
 import edu.uncc.aside.phpcodeannotate.Constants;
+import edu.uncc.aside.phpcodeannotate.NodeFinder;
 import edu.uncc.aside.phpcodeannotate.Plugin;
 import edu.uncc.aside.phpcodeannotate.models.AnnotationRecord;
 import edu.uncc.aside.phpcodeannotate.models.MarkerRecord;
@@ -872,10 +876,26 @@ if(isAnnotated == false){//not annotated yet, show red warnings with questions
 									if(parameters != null & parameters.length > 0){
 								//		System.out.println("length > 0");
 										Expression tableParameter = parameters[0];
+										
 									if(tableParameter instanceof Scalar){
-										Scalar tableScalar = (Scalar)tableParameter;
-										String tableName = tableScalar.getStringValue();
-										String pureTableName = StringUtils.obtainPureTableName(tableName);
+										Scalar tableStrScalar = (Scalar)tableParameter;
+										String tableStrName = tableStrScalar.getStringValue();
+										String tableName = null;
+										//if the sensitive operation's first parameter is an embeded SQL string, which means
+										//the name of it include sql, e.g. get_record_sql, then extract out its table name
+										//the format is like SELECT * FROM {user}, e.g. get_record_sql('SELECT * FROM {user} WHERE id = ?', array(1));
+										String sm_name = sm.getFunctionName();
+										String pureTableName = null;
+										if(sm_name.toLowerCase().contains("sql")){
+											String[] tmpStrs = tableStrName.split("\\{", -1);
+											String[] tmpStrs2 = tmpStrs[1].split("\\}", -1);
+											tableName = tmpStrs2[0];
+											pureTableName = tableName;
+										}			
+										else{
+										tableName = tableStrName; //then it is like 'tablename' or "tablename"
+										pureTableName = StringUtils.obtainPureTableName(tableName);
+										}
 										String fileDir = resource.getFullPath().toString();
 										//temporarily modified Oct. 28, 2013
 									//	if(Plugin.sensitive_DB_Tables.contains(pureTableName)){
@@ -1270,4 +1290,95 @@ if(isAnnotated == false){//not annotated yet, show red warnings with questions
 		}
 		return null;
 	}
+	
+	public static void getNodesNameAndLineNumersInSingleFile(
+		HashSet<MarkerRecord> markerRecordsInSingleFile, ISourceModule iSourceModule) {
+			IResource resource = iSourceModule.getResource();
+			Iterator<MarkerRecord> iter = markerRecordsInSingleFile.iterator();
+			MarkerRecord record = null;
+			while(iter.hasNext()){
+		    record = iter.next();
+		    
+		    createMarkerForAccessors(iSourceModule, record.isAnnotated(), record.getNodePositionInfo().getStartPosition(), record.getNodePositionInfo().getLength());
+		}
+	}
+	public static void getNodeNameAndLineNumber(ISourceModule iSourceModule, int start, int length){
+		Program astRoot= null;
+		try {
+			astRoot = Utils.getCompilationUnit(iSourceModule);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		ASTNode node = NodeFinder.perform(astRoot, start, length);
+		String funcName = getFuncName(node);
+		int lineNum = getLineNum(node);
+		
+				
+				
+
+	
+	}
+	public static int getLineNum(ASTNode node){
+		Document document = null;
+		try {
+			document = new Document(node.getProgramRoot().getSourceModule().getSource());
+		} catch (ModelException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		int lineNum = 0;
+		try {
+			lineNum = document.getLineOfOffset(node.getStart()) + 1;
+		} catch (BadLocationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	    return lineNum;
+		//System.out.println("line num = " + lineNum);
+	}
+	
+	public static String getFuncName(ASTNode node){
+		
+		if (node == null){
+			System.err.println("node is null in Util.java");
+			return null;
+		}
+		int nodeType = node.getType();
+		
+		ITypeBinding binding = null;
+		String fullyQualifiedName = null;
+		String funcName = null;
+		
+		switch (nodeType) {
+		//newly added Sept 24th
+		case ASTNode.FUNCTION_INVOCATION:
+			FunctionInvocation fi = (FunctionInvocation)node;
+
+			//System.out.println("functioninvocation = " + node.getFunctionName().getName().toString());
+			if (fi.getFunctionName().getFunctionName().getType() == ASTNode.IDENTIFIER) {
+					 Identifier id = (Identifier) fi.getFunctionName().getFunctionName();
+					 funcName = id.getName();
+			}
+			break;
+		case ASTNode.METHOD_INVOCATION:
+			MethodInvocation mi = (MethodInvocation) node;
+			
+			if (mi.getMethod().getFunctionName().getFunctionName().getType() == 60) {
+				Variable varNode = (Variable) mi.getMethod().getFunctionName()
+						.getFunctionName();
+				if (varNode.getVariableName().getType() == 33){
+					Identifier methodIdentifier = (Identifier) varNode.getVariableName();
+					funcName = methodIdentifier.getName();
+				}
+			}
+			break;
+		default:
+			System.err
+					.println("the selected code piece is not recognized by CodeAnnotate...");
+			break;
+		}
+		return funcName;
+	}
+	
 }

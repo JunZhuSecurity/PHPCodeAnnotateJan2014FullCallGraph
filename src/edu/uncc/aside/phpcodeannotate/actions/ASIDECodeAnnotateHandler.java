@@ -166,6 +166,7 @@ public class ASIDECodeAnnotateHandler extends AbstractHandler {
 				
 	    }
 	    }
+	    
 	/*    for(int i = 0; i < 20; i++)
 	    System.out.println("files num = " + numOfFiles);*/
 	    System.out.println("sum of folders =" + folders.length);
@@ -184,7 +185,6 @@ public class ASIDECodeAnnotateHandler extends AbstractHandler {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
 			for (ISourceModule tmpSourceModule : sourceModules) {
 				System.out.println("scanning " + tmpSourceModule.getElementName());
 				// if it is not the first time to run CodeAnnotate on this project, then disable the scan function,
@@ -210,6 +210,8 @@ public class ASIDECodeAnnotateHandler extends AbstractHandler {
 				SensitiveOperationVisitor visitor = new SensitiveOperationVisitor(
 						tmpSourceModule, Plugin.sensitiveOperationsForCurrentIteration, Plugin.sensitiveOperationsForAnotherIteration, Plugin.sensitiveOperations);
 				Program root = null;
+				System.out.println("tmpSourceModule name = " + tmpSourceModule.getElementName() + " in " + tmpSourceModule.getPath().toString());
+				
 				try {
 					root = Utils.getCompilationUnit(tmpSourceModule);
 				} catch (Exception e) {
